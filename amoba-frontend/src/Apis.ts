@@ -22,12 +22,7 @@ export const getGameState = async () => {
         });
         return response.data;
     } catch (error) {
-        if(!axios.isAxiosError(error) || error.status === 404){
-            throw error;
-        }
-        else {
-            return null;
-        }
+        console.log(error);
     }
 }
 

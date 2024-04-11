@@ -1,11 +1,11 @@
 import {useEffect, useState} from "react";
 import {getGameState, play} from "../Apis.ts";
 
-interface GameComponentProps{
+interface GameComponentProps {
     onGameEnd: () => void;
 }
 
-export default function GameComponent({onGameEnd}: GameComponentProps){
+export default function GameComponent({onGameEnd}: GameComponentProps) {
     const initial: string[][] = Array(8).fill(null).map(() => Array(8).fill('.'));
 
     const [gameState, setGameState] = useState<string[][]>(initial);
@@ -13,19 +13,21 @@ export default function GameComponent({onGameEnd}: GameComponentProps){
 
     useEffect(() => {
         console.log('poll1');
+        let cleanupExecuted = false; // Flag to ensure cleanup happens only once
         const intervalId = setInterval(async () => {
             console.log('poll2');
-            try {
+            if (!cleanupExecuted) {
                 const response = await getGameState();
                 setGameState(response.gameState);
                 setIsActive(response.isActive);
                 if (response.win) {
-                    clearInterval(intervalId);
-                    onGameEnd();
+                    if (!cleanupExecuted) {
+                        cleanupExecuted = true;
+                        clearInterval(intervalId);
+                        onGameEnd();
+                        alert('You lost.');
+                    }
                 }
-            } catch {
-                onGameEnd();
-                alert('You lost.');
             }
         }, 500);
 
@@ -35,12 +37,11 @@ export default function GameComponent({onGameEnd}: GameComponentProps){
 
     const handleMove = async (x: number, y: number) => {
         const response = await play({x, y});
-        if(response.win === true){
+        if (response.win === true) {
             setGameState(response.gameState);
             alert('You win!');
             onGameEnd();
-        }
-        else {
+        } else {
             const response2 = await getGameState();
             setGameState(response2.gameState);
             setIsActive(response2['isActive']);

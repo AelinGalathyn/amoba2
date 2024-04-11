@@ -10,6 +10,7 @@ export class GameService {
     const game = await this.prisma.game.findFirst({
       where: {OR: [{ session1: sessionId }, { session2: sessionId }]}
     });
+
     if (!game) {
       throw new NotFoundException('Game not found');
     }
@@ -31,7 +32,7 @@ export class GameService {
     const empty = board.flat().filter(x => x === ".").length;
     const movecounter = 8 * 8 - empty;
 
-    const win = this.checkBoard(board);
+    const win: boolean = game.won;
 
 
     return {
@@ -60,6 +61,13 @@ export class GameService {
     board[move.x][move.y] = playerSymbol;
 
     const win = this.checkWin(board, move.x, move.y, playerSymbol);
+
+    if(win){
+      await this.prisma.game.update({
+        where: {id: game.id},
+        data: {won: true},
+      })
+    }
 
     await this.prisma.game.update({
       where: {id: game.id},

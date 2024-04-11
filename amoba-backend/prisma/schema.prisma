@@ -25,4 +25,5 @@ model Game {
   session2            String?
   lastActionTimestamp DateTime?
   state               String
+  won                 Boolean   @default(false)
 }
