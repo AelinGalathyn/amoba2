@@ -9,7 +9,8 @@ export default function GameComponent({onGameEnd}: GameComponentProps) {
     const initial: string[][] = Array(8).fill(null).map(() => Array(8).fill('.'));
 
     const [gameState, setGameState] = useState<string[][]>(initial);
-    const [isActive, setIsActive] = useState<boolean>(false);
+    const [isActive, setIsActive] = useState<boolean>();
+    const [timeRemaining, setTime] = useState<number>(0);
 
     useEffect(() => {
         console.log('poll1');
@@ -17,17 +18,29 @@ export default function GameComponent({onGameEnd}: GameComponentProps) {
         const intervalId = setInterval(async () => {
             console.log('poll2');
             if (!cleanupExecuted) {
-                const response = await getGameState();
-                setGameState(response.gameState);
-                setIsActive(response.isActive);
-                if (response.win) {
-                    if (!cleanupExecuted) {
+                try {
+                    const response = await getGameState();
+                    console.log('poll3');
+                    setGameState(response.gameState);
+                    setIsActive(response.isActive);
+                    setTime(response.remainingTime);
+                    if (response.win === 'true') {
                         cleanupExecuted = true;
                         clearInterval(intervalId);
                         onGameEnd();
                         alert('You lost.');
+                    } else if (response.win === 'timeout') {
+                        cleanupExecuted = true;
+                        clearInterval(intervalId);
+                        alert('Player timed out.')
+                        onGameEnd();
                     }
+                } catch {
+                    console.log('catch');
+                    cleanupExecuted = true;
+                    onGameEnd();
                 }
+
             }
         }, 500);
 
@@ -49,7 +62,9 @@ export default function GameComponent({onGameEnd}: GameComponentProps) {
     }
 
     return (
-        <div>
+        <div className="d-flex flex-column align-items-center justify-content-center" style={{minHeight: "100%"}}>
+            {isActive ? `Time remaining: ${timeRemaining}` : null}
+            <p>Active player: {isActive === true ? 'you' : 'opponent'}</p>
             <table id="game-board">
                 <tbody>
                 {gameState.map((row, rowIndex) => (
@@ -59,8 +74,12 @@ export default function GameComponent({onGameEnd}: GameComponentProps) {
                                 <button
                                     disabled={!isActive || cell !== '.'}
                                     onClick={() => handleMove(rowIndex, columnIndex)}
-                                    style={{width: '50px', height: '50px'}}
-                                >
+                                    style={{
+                                        width: '50px',
+                                        height: '50px',
+                                        backgroundColor: '#8E526D',
+                                        color: '#F2E0F5'
+                                    }}>
                                     {cell !== '.' ? cell : ''}
                                 </button>
                             </td>
@@ -70,6 +89,5 @@ export default function GameComponent({onGameEnd}: GameComponentProps) {
                 </tbody>
             </table>
         </div>
-
     );
 }

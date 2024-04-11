@@ -8,7 +8,7 @@ function App() {
     const [gameStarted, setGameStarted] = useState(false);
 
     return (
-        <div>
+        <div className="d-flex justify-content-center align-items-center vh-100">
             {gameStarted ? (<GameComponent onGameEnd={() => setGameStarted(false)}/>) : (<LobbyComponent onGameStart={() => setGameStarted(true)}/>)}
         </div>
     );

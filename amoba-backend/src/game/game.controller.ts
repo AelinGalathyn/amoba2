@@ -11,11 +11,16 @@ export class GameController {
   @Get()
   async getGameState(@Req() req: Request, @Res() res: Response) {
     const sessionId = req.cookies["sessionId"];
-    const gameState = await this.gameService.getGameState(sessionId);
-    if (gameState.win === true) {
+    try {
+      const gameState = await this.gameService.getGameState(sessionId);
+      if (gameState.win !== 'false') {
+        res = this.clearSessionCookie(res);
+      }
+      return res.send(gameState);
+    } catch {
       res = this.clearSessionCookie(res);
+      return res.send;
     }
-    return res.send(gameState);
   }
 
 

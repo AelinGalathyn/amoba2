@@ -20,10 +20,10 @@ model LobbyEntry {
 }
 
 model Game {
-  id                  Int       @id @default(autoincrement())
+  id                  Int      @id @default(autoincrement())
   session1            String
   session2            String?
-  lastActionTimestamp DateTime?
+  lastActionTimestamp DateTime
   state               String
-  won                 Boolean   @default(false)
+  won                 String   @default("false")
 }

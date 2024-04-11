@@ -24,7 +24,7 @@ export default function LobbyComponent({onGameStart}: LobbyComponentProps) {
                 console.log(response.gameStarted);
                 if (response.gameStarted) {
                     onGameStart();
-                    clearInterval(intervalId); // Ensure clearInterval is called before changing state
+                    clearInterval(intervalId);
                     setStatus(Status.GameFound);
                 } else {
                     if (status !== Status.Waiting) {
@@ -33,13 +33,13 @@ export default function LobbyComponent({onGameStart}: LobbyComponentProps) {
                 }
             } catch (error) {
                 console.error('Error searching for game:', error);
-                clearInterval(intervalId); // Ensure clearInterval is called before changing state
+                clearInterval(intervalId);
                 setStatus(Status.Idle);
             }
         };
 
         if (status === Status.Searching) {
-            setStatus(Status.Waiting); // Move to waiting immediately after search begins
+            setStatus(Status.Waiting);
         }
 
         if (status === Status.Waiting || status === Status.Searching) {
@@ -47,21 +47,22 @@ export default function LobbyComponent({onGameStart}: LobbyComponentProps) {
         }
 
         return () => {
-            clearInterval(intervalId); // Cleanup on unmount or status change
+            clearInterval(intervalId);
         };
-    }, [status, onGameStart]); // Dependency array
+    }, [status, onGameStart]);
 
     const handleSearchForGame = () => {
         setStatus(Status.Searching);
     };
 
     return (
-        <div>
+        <div className="d-flex flex-column align-items-center justify-content-center" style={{ minHeight: "100%" }}>
             <h1>Lobby</h1>
-            {status === Status.Idle && <button onClick={handleSearchForGame}>Search for Game</button>}
+            {status === Status.Idle && <button id="joinButton" className="btn btn-success" onClick={handleSearchForGame}>Search for Game</button>}
             {status === Status.Searching && <p>Searching for a game...</p>}
             {status === Status.Waiting && <p>Waiting for an opponent...</p>}
             {status === Status.GameFound && <p>Game found! Redirecting...</p>}
         </div>
+
     );
 }
