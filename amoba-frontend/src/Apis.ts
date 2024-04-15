@@ -1,23 +1,34 @@
 import axios from 'axios';
 
 const url = 'http://localhost:3000';
+let sessionId: number = -1;
 
 export const joinLobby = async () => {
     try {
-        const response = await axios.get(`${url}/lobby`, {
-            withCredentials: true
-        });
+        let body;
+        if(sessionId != -1){
+            body = {
+                sessionId: sessionId,
+                timeout: 2000,
+            };
+        }
+        else {
+            body = {
+                timeout: 2000,
+            }
+        }
+
+        const response = await axios.post(`${url}/lobby`, body);
+        sessionId = response.data.sessionId;
         return response.data;
     } catch (error) {
         console.error(error);
-        throw error;
     }
 }
 
 export const getGameState = async () => {
     try {
-        const response = await axios.get(`${url}/game`, {
-            withCredentials: true,
+        const response = await axios.get(`${url}/game/${sessionId}`, {
             timeout: 2000,
         });
         return response.data;
@@ -28,14 +39,18 @@ export const getGameState = async () => {
 
 export const play = async (move: { x: number, y: number }) => {
     try {
-        const response = await axios.post(`${url}/game/play`, {
+        const response = await axios.post(`${url}/game/${sessionId}/play`, {
             'x': move.x,
             'y': move.y,
         }, {
-            withCredentials: true
+            timeout: 2000,
         });
         return response.data;
     } catch (error) {
         console.error(error);
     }
+}
+
+export default function nullSession(){
+    sessionId = -1;
 }

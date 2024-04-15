@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from "@nestjs/common";
+import { BadRequestException, Injectable, OnModuleInit } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 
 @Injectable()
@@ -9,20 +9,17 @@ export class LobbyService implements OnModuleInit{
     setInterval(async () => {
       const lobby = await this.prisma.lobbyEntry.findFirst();
       if(lobby) {
-        if (Date.now() - lobby.timestamp.getTime() >= 10) {
+        if ((Date.now() - lobby.timestamp.getTime())/1000 >= 10) {
           await this.prisma.lobbyEntry.delete({ where: { id: lobby.id } });
         }
       }
     }, 5000);
   }
 
-  async joinOrCreate(req: any){
+  async joinOrCreate(sessionId?: number){
     let gameStarted = false;
-    let sessionId: string;
-    if(!req.cookies['sessionId']) {
-      sessionId = req.sessionID;
-    }else {
-      sessionId = req.cookies['sessionId'];
+    if(!sessionId) {
+      sessionId = Math.round(Math.random()*10000)+1;
     }
 
     const existingLobby = await this.prisma.lobbyEntry.findFirst();
@@ -31,6 +28,9 @@ export class LobbyService implements OnModuleInit{
           {session1: sessionId},
           {session2: sessionId}]
       }});
+
+    console.log('lobby check: '+sessionId + existingLobby);
+    console.log('game check: '+sessionId + existingGame);
 
     if (existingLobby){
       if(existingLobby.sessionId!==sessionId) {
@@ -42,8 +42,7 @@ export class LobbyService implements OnModuleInit{
           data: {
             session1: existingLobby.sessionId,
             session2: sessionId,
-            state: "",
-            lastActionTimestamp: new Date(),
+            state: JSON.stringify(Array(8).fill(null).map(() => Array(8).fill("."))),
           }
         });
 

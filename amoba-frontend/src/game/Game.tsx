@@ -1,5 +1,5 @@
 import {useEffect, useState} from "react";
-import {getGameState, play} from "../Apis.ts";
+import nullSession, {getGameState, play} from "../Apis.ts";
 
 interface GameComponentProps {
     onGameEnd: () => void;
@@ -11,10 +11,12 @@ export default function GameComponent({onGameEnd}: GameComponentProps) {
     const [gameState, setGameState] = useState<string[][]>(initial);
     const [isActive, setIsActive] = useState<boolean>();
     const [timeRemaining, setTime] = useState<number>(0);
+    const [playerRole, setPlayerRole] = useState<string>();
+
+    let cleanupExecuted = false;
 
     useEffect(() => {
         console.log('poll1');
-        let cleanupExecuted = false; // Flag to ensure cleanup happens only once
         const intervalId = setInterval(async () => {
             console.log('poll2');
             if (!cleanupExecuted) {
@@ -22,17 +24,20 @@ export default function GameComponent({onGameEnd}: GameComponentProps) {
                     const response = await getGameState();
                     console.log('poll3');
                     setGameState(response.gameState);
+                    setPlayerRole(response.playerRole);
                     setIsActive(response.isActive);
                     setTime(response.remainingTime);
                     if (response.win === 'true') {
                         cleanupExecuted = true;
                         clearInterval(intervalId);
+                        nullSession();
                         onGameEnd();
                         alert('You lost.');
                     } else if (response.win === 'timeout') {
                         cleanupExecuted = true;
                         clearInterval(intervalId);
                         alert('Player timed out.')
+                        nullSession();
                         onGameEnd();
                     }
                 } catch {
@@ -51,8 +56,10 @@ export default function GameComponent({onGameEnd}: GameComponentProps) {
     const handleMove = async (x: number, y: number) => {
         const response = await play({x, y});
         if (response.win === true) {
+            cleanupExecuted = true;
             setGameState(response.gameState);
             alert('You win!');
+            nullSession();
             onGameEnd();
         } else {
             const response2 = await getGameState();
@@ -64,7 +71,7 @@ export default function GameComponent({onGameEnd}: GameComponentProps) {
     return (
         <div className="d-flex flex-column align-items-center justify-content-center" style={{minHeight: "100%"}}>
             {isActive ? `Time remaining: ${timeRemaining}` : null}
-            <p>Active player: {isActive === true ? 'you' : 'opponent'}</p>
+            <p>Active player: {isActive === true ? `you (${ playerRole === "player1" ? "X" : "O"})` : 'opponent'}</p>
             <table id="game-board">
                 <tbody>
                 {gameState.map((row, rowIndex) => (

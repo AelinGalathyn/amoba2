@@ -13,6 +13,7 @@ export class GameService implements OnModuleInit {
       const currentTime: Date = new Date();
       for (const game of games) {
         let sinceLastMove = (currentTime.getTime() - game.lastActionTimestamp.getTime()) / 1000;
+        let sinceLastCheckup = (currentTime.getTime() - game.lastCheckupTime.getTime()) / 1000;
         if (game.won === "false" && sinceLastMove >= 10) {
           await this.prisma.game.update({
             where: { id: game.id },
@@ -21,18 +22,27 @@ export class GameService implements OnModuleInit {
               lastActionTimestamp: new Date()
             }
           });
-        } else if (sinceLastMove >= 10) {
-          await this.prisma.game.delete({
-            where: { id: game.id }
+        }
+        else if(sinceLastCheckup >= 10){
+          await this.prisma.game.update({
+            where: { id: game.id },
+            data: {
+              won: "timeout",
+              lastActionTimestamp: new Date()
+            }
           });
         }
       }
     }, 5000);
   }
 
-  async getGameState(sessionId: string) {
+  async getGameState(sessionId: number) {
     const game = await this.prisma.game.findFirst({
       where: { OR: [{ session1: sessionId }, { session2: sessionId }] }
+    });
+    this.prisma.game.update({
+      where: { id: game.id },
+      data: { lastCheckupTime: new Date() }
     });
 
     if (!game) {
@@ -41,15 +51,8 @@ export class GameService implements OnModuleInit {
 
     let board: any[][];
 
-    if (game.state === "") {
-      board = this.initializeGameBoard();
-      await this.prisma.game.update({
-        where: { id: game.id },
-        data: { state: JSON.stringify(board) }
-      });
-    } else {
-      board = JSON.parse(game.state);
-    }
+    board = JSON.parse(game.state);
+
     const playerRole = game.session1 === sessionId ? "player1" : "player2";
 
     const empty = board.flat().filter(x => x === ".").length;
@@ -68,13 +71,14 @@ export class GameService implements OnModuleInit {
 
     return {
       win,
+      playerRole,
       remainingTime: 10 - Math.round(remainingTime),
       gameState: board,
       isActive: movecounter % 2 === 0 ? playerRole === "player1" : playerRole === "player2"
     };
   }
 
-  async play(sessionId: string, move: MoveDto) {
+  async play(sessionId: number, move: MoveDto) {
     const game = await this.prisma.game.findFirst({
       where: { OR: [{ session1: sessionId }, { session2: sessionId }] }
     });
@@ -96,12 +100,12 @@ export class GameService implements OnModuleInit {
     if (win) {
       await this.prisma.game.update({
         where: { id: game.id },
-        data: { won: "true", lastActionTimestamp: new Date(), state: JSON.stringify(board) }
+        data: { won: "true", lastActionTimestamp: new Date(), state: JSON.stringify(board), lastCheckupTime: new Date() }
       });
     } else {
       await this.prisma.game.update({
         where: { id: game.id },
-        data: { state: JSON.stringify(board), lastActionTimestamp: new Date() }
+        data: { state: JSON.stringify(board), lastActionTimestamp: new Date(), lastCheckupTime: new Date() }
       });
     }
 
@@ -114,10 +118,6 @@ export class GameService implements OnModuleInit {
     const diagWin = this.checkDiagWin(board, x, y, symbol);
 
     return rowWin || colWin || diagWin;
-  }
-
-  initializeGameBoard() {
-    return Array(8).fill(null).map(() => Array(8).fill("."));
   }
 
   private checkDiagWin(board: any[][], x: number, y: number, symbol: string) {

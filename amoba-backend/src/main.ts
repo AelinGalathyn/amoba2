@@ -22,17 +22,6 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(new ValidationPipe());
   await clearDatabase();
-  app.use(
-    session({
-      secret: 'nojminoj',
-      resave: false,
-      saveUninitialized: false,
-      cookie: {
-        maxAge: 1000*60*60
-      }
-    }),
-  );
-  app.use(cookieParser());
   app.enableCors({
     origin: 'http://localhost:5173',
     credentials: true

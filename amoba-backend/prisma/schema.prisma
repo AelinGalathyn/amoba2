@@ -15,15 +15,16 @@ datasource db {
 
 model LobbyEntry {
   id        Int      @id @default(autoincrement())
-  sessionId String   @unique
+  sessionId Int      @unique
   timestamp DateTime @default(now())
 }
 
 model Game {
   id                  Int      @id @default(autoincrement())
-  session1            String
-  session2            String?
-  lastActionTimestamp DateTime
+  session1            Int
+  session2            Int?
+  lastActionTimestamp DateTime @default(now())
   state               String
   won                 String   @default("false")
+  lastCheckupTime     DateTime @default(now())
 }
