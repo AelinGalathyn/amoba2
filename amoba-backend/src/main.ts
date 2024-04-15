@@ -1,18 +1,12 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import * as session from "express-session";
 import { ValidationPipe } from "@nestjs/common";
-import * as cookieParser from 'cookie-parser';
 import { PrismaClient } from '@prisma/client';
-import * as express from 'express';
 
 
 const prisma = new PrismaClient();
-const app = express();
-const port = 3000; // or whatever your port is
 
 async function clearDatabase() {
-  // The same deletion logic as in prismaCleanup.ts
   await prisma.lobbyEntry.deleteMany({});
   await prisma.game.deleteMany({});
   console.log('Database cleared');

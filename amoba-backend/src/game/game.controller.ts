@@ -9,14 +9,12 @@ export class GameController {
 
   @Get(":sessionId")
   async getGameState(@Param("sessionId") sessionId: number) {
-    const gameState = await this.gameService.getGameState(+sessionId);
-    return gameState;
+    return await this.gameService.getGameState(+sessionId);
   }
 
 
   @Post(":sessionId/play")
   async play(@Param('sessionId') sessionId: number, @Body() move: MoveDto) {
-    const ret = await this.gameService.play(+sessionId, move);
-    return ret;
+    return await this.gameService.play(+sessionId, move);
   }
 }

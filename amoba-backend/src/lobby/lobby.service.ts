@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, OnModuleInit } from "@nestjs/common";
+import { Injectable, OnModuleInit } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 
 @Injectable()
@@ -28,9 +28,6 @@ export class LobbyService implements OnModuleInit{
           {session1: sessionId},
           {session2: sessionId}]
       }});
-
-    console.log('lobby check: '+sessionId + existingLobby);
-    console.log('game check: '+sessionId + existingGame);
 
     if (existingLobby){
       if(existingLobby.sessionId!==sessionId) {

@@ -1,7 +1,5 @@
-import { Body, Controller, Get, Post, Req, Res } from "@nestjs/common";
+import { Body, Controller, Post } from "@nestjs/common";
 import { LobbyService } from "./lobby.service";
-import { Request, Response } from "express";
-import session from "express-session";
 
 @Controller("lobby")
 export class LobbyController {
